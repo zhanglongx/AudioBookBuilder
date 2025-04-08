@@ -9,6 +9,7 @@ import ffmpeg
 import subprocess
 
 from typing import List
+from tqdm import tqdm
 
 from MediaCat.const import (DEFAULT_ENCODING)
 
@@ -24,7 +25,6 @@ class AudiobookBuilder:
         self.re_encode = re_encode
 
         self.temp_dir = tempfile.mkdtemp()
-        self.converted_files: List[str] = []
 
     @property
     def aac_encoder(self) -> str:
@@ -68,13 +68,13 @@ class AudiobookBuilder:
             )
         return output_path
 
-    def _generate_chapters(self) -> str:
+    def _generate_chapters(self, converted_files) -> str:
         """Generate a ffmetadata file with chapters"""
         metadata_path = os.path.join(self.temp_dir, "chapters.txt")
         with open(metadata_path, "w", encoding=DEFAULT_ENCODING) as f:
             f.write(";FFMETADATA1\n")
             current_time = 0
-            for idx, file in enumerate(self.converted_files):
+            for idx, file in enumerate(converted_files):
                 duration = self._get_audio_duration(file)
                 f.write("[CHAPTER]\n")
                 f.write("TIMEBASE=1/1000\n")
@@ -90,11 +90,11 @@ class AudiobookBuilder:
         duration = float(probe['format']['duration'])
         return duration
 
-    def _concat_audio(self, output_file: str, metadata_path: str) -> None:
+    def _concat_audio(self, output_file: str, metadata_path: str, converted_files : List ) -> None:
         """Concatenate audio files and embed chapters using ffmpeg-python"""
         concat_list_path = os.path.join(self.temp_dir, "inputs.txt")
         with open(concat_list_path, "w", encoding=DEFAULT_ENCODING) as f:
-            for file in self.converted_files:
+            for file in converted_files:
                 f.write(f"file '{file}'\n")
 
         joined_audio_path = os.path.join(self.temp_dir, "joined.m4b")
@@ -127,13 +127,20 @@ class AudiobookBuilder:
             if not matched_files:
                 raise FileNotFoundError("No matching files found.")
 
-            self.converted_files = [
-                self._convert_to_m4a(file, idx)
-                for idx, file in enumerate(matched_files)
-            ]
+            # Import tqdm for progress bar visualization
 
-            metadata_path = self._generate_chapters()
-            self._concat_audio(output_file, metadata_path)
+            # Convert files with progress bar showing conversion status
+            converted_files = []
+            for idx, file in enumerate(tqdm(matched_files, 
+                desc="Converting files", unit="file")):
+                converted_file = self._convert_to_m4a(file, idx)
+                converted_files.append(converted_file)
+
+            metadata_path = self._generate_chapters(
+                converted_files=converted_files)
+            self._concat_audio(output_file=output_file, 
+                metadata_path=metadata_path, 
+                converted_files=converted_files)
 
         finally:
             shutil.rmtree(self.temp_dir)
@@ -150,14 +157,14 @@ def main_cat(args : argparse.Namespace) -> None:
 
         builder = AudiobookBuilder(directory=args.PATH, 
             file_keywords=file_keywords,
-            re_encode=args.force)
+            re_encode=not args.not_force)
         builder.build(output_file=output_file)
 
 def parser_cat(subparser: argparse._SubParsersAction) -> None:
     cat_parser = subparser.add_parser("cat", aliases=["audiobook"],
         help="Build an audiobook from media files"
     )
-    cat_parser.add_argument("-f", "--force", action="store_true", default=False,
+    cat_parser.add_argument("--not-force", action="store_true", default=False,
         help="force re-encode all files, even if they are already in .m4a format"
     )
     cat_parser.add_argument("-l", "--list", type=str, default="list.txt",
