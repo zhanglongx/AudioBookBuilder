@@ -84,7 +84,9 @@ class AudiobookBuilder:
                 .input(input_file)
                 .output(output_path, **{
                     'c:a': self.aac_encoder, 
-                    'b:a': self.bitrate})
+                    'b:a': self.bitrate,
+                    'map': '0:a'
+                })
                 .overwrite_output()
                 .run(quiet=not self.verbose)
             )
