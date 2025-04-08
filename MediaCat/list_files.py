@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+import logging
 
 from typing import List
 
@@ -48,6 +49,8 @@ def main_list(args : argparse.Namespace) -> None:
 
     # default filters
     filters.append(r'-[a-zA-Z0-9-]{11,}$')
+
+    logging.debug(f"Filters: {filters}")
     
     if os.path.isfile(path):
         with ArchiveExtractor(path) as temp_dir:

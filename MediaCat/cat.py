@@ -32,17 +32,22 @@ class AudiobookBuilder:
 
         self.temp_dir = tempfile.mkdtemp()
 
+        logging.debug(f"Temporary directory created: {self.temp_dir}")
+
     @property
     def aac_encoder(self) -> str:
         """Select hardware AAC encoder based on platform"""
         # FIXME: dynamic probing for available encoders
         system = platform.system()
         if system == "Windows":
-            return "aac_mf"  # MediaFoundation AAC encoder
+            logging.debug("Using Windows Media Foundation AAC encoder")
+            return "aac_mf"
         elif system == "Darwin":
-            return "aac_at"  # Apple AudioToolbox AAC encoder
+            logging.debug("Using Apple AudioToolbox AAC encoder")
+            return "aac_at"
         else:
-            return "aac"  # Default software encoder
+            logging.debug("Using fall-back software AAC encoder")
+            return "aac"
 
     def _match_files(self) -> List[str]:
         """Match files in the directory that contain any of the keywords"""
@@ -168,7 +173,7 @@ def main_cat(args : argparse.Namespace) -> None:
 
         builder = AudiobookBuilder(directory=args.PATH, 
             file_keywords=file_keywords,
-            re_encode=not args.not_force,
+            re_encode=not args.not_re_encode,
             verbose=args.verbose)
         builder.build(output_file=output_file)
 
@@ -181,7 +186,7 @@ def parser_cat(subparser: argparse._SubParsersAction) -> None:
     cat_parser.add_argument("-b", "--bitrate", type=str, default=DEFAULT_BITRATE,
         help="re-encode audio bitrate"
     )
-    cat_parser.add_argument("--not-force", action="store_true", default=False,
+    cat_parser.add_argument("--not-re-encode", action="store_true", default=False,
         help="force re-encode all files, even if they are already in .m4a format"
     )
     cat_parser.add_argument("-l", "--list", type=str, default="list.txt",
