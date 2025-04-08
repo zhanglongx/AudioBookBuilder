@@ -192,21 +192,15 @@ def main_cat(args : argparse.Namespace) -> None:
 
 def parser_cat(subparser: argparse._SubParsersAction) -> None:
     cat_parser = subparser.add_parser("cat", aliases=["audiobook"],
-        help="Build an audiobook from media files"
-    )
+        help="Build an audiobook from media files")
     cat_parser.add_argument("-b", "--bitrate", type=str, default=DEFAULT_BITRATE,
-        help="re-encode audio bitrate"
-    )
+        help="re-encode audio bitrate")
     cat_parser.add_argument("--not-re-encode", action="store_true", default=False,
-        help="force re-encode all files, even if they are already in .m4a format"
-    )
+        help="force re-encode all files, even if they are already in .m4a format")
     cat_parser.add_argument("-l", "--list", type=str, default="list.txt",
-        help="keywords to match files",
-    )
+        help="keywords to match files",)
     cat_parser.add_argument("-o", "--output", type=str, default="output.m4b",
-        help="output file name (with .m4b extension)"
-    )
+        help="output file name (with .m4b extension)")
     cat_parser.add_argument("PATH", type=str, 
-        help="input directory containing media files",
-        )
+        help="input directory containing media files",)
     cat_parser.set_defaults(func=main_cat)

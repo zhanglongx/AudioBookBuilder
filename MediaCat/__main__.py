@@ -13,8 +13,7 @@ def main() -> None:
     parser.add_argument('-v', '--verbose', action='store_true', default=False,
         help='Enable verbose output')
     parser.add_argument('--version', action='version', version=f'MediaCat {VERSION}',
-        help='Show the version number and exit'
-    )
+        help='Show the version number and exit')
     subparsers = parser.add_subparsers(dest='command')
 
     # Add the list command parser
