@@ -53,6 +53,8 @@ def main_list(args : argparse.Namespace) -> None:
     logging.debug(f"Filters: {filters}")
     
     if os.path.isfile(path):
+        raise NotImplementedError("Reading files in archives is not implemented yet.")
+
         with ArchiveExtractor(path) as temp_dir:
             list_files = ListFiles(path=str(temp_dir), 
                 filters=filters)
