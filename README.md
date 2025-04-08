@@ -38,7 +38,7 @@ Mediacat is a tool to automate the stitching of media files, mainly for the prod
 
     - ❌ `-a-b-c.mp4` -> `-ab-c.mp4`
 
-4. Concat the media files:
+4. Once the `list` file('list.txt' as default) is ready, concat the media files:
 
     ```bash
     python -m MediaCat cat <path>
