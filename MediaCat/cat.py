@@ -20,7 +20,7 @@ class AudiobookBuilder:
         file_keywords : List[str],
         bitrate : str = DEFAULT_BITRATE,
         verbose : bool = False,
-        re_encode : bool = False) -> None:
+        re_encode : bool = True) -> None:
         """
         AudiobookBuilder class to build an audiobook from media files.
         :param directory: Path to the directory containing media files.
@@ -31,6 +31,9 @@ class AudiobookBuilder:
         """
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory not found: {directory}")
+
+        if re_encode is False:
+            logging.warning("Copy files instead of re-encoding may cause issues")
 
         self.directory = os.path.abspath(directory)
         # remove file extensions from keywords
