@@ -36,6 +36,8 @@ Mediacat will first generate a list of media files in a directory, extract audio
 
     Examples:
 
+    - ✅(Built-in) `-a-b-c-JXCDcGmuibo.m4a` -> `a-b-c.m4a`
+
     - ✅ `-a-b-c.m4a` -> `a-b-c.m4a`
 
     - ❌ `-a-b-c.m4a` -> `-ab-c.m4a`
