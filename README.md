@@ -2,6 +2,10 @@
 
 Mediacat is a tool to automate the stitching of media files, mainly for the production of audio books.
 
+## Pre-requisites
+
+- [FFMpeg](https://ffmpeg.org/download.html)
+
 ## Usage
 
 1. Install the required packages:
