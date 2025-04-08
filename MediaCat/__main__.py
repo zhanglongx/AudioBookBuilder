@@ -1,6 +1,7 @@
 
 import argparse
 import sys
+import logging
 
 from MediaCat.list_files import parser_list
 from MediaCat.cat import parser_cat
@@ -9,6 +10,8 @@ VERSION = "1.0.0"
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="MediaCat: A tool for media file management.")
+    parser.add_argument('-v', '--verbose', action='store_true', default=False,
+        help='Enable verbose output')
     parser.add_argument('--version', action='version', version='MediaCat 1.0.0',
         help='Show the version number and exit'
     )
@@ -23,6 +26,9 @@ def main() -> None:
     if args.command is None:
         parser.print_help()
         sys.exit(1)
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
 
     # Execute the command
     args.func(args)

@@ -16,12 +16,14 @@ from MediaCat.const import (DEFAULT_ENCODING)
 class AudiobookBuilder:
     def __init__(self, directory: str, 
         file_keywords : List[str],
+        verbose : bool = False,
         re_encode : bool = False) -> None:
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory not found: {directory}")
 
         self.directory = os.path.abspath(directory)
         self.file_keywords = [os.path.splitext(keyword)[0] for keyword in file_keywords]
+        self.verbose = verbose
         self.re_encode = re_encode
 
         self.temp_dir = tempfile.mkdtemp()
@@ -64,7 +66,7 @@ class AudiobookBuilder:
                 .input(input_file)
                 .output(output_path, **{'c:a': self.aac_encoder, 'b:a': '196k'})
                 .overwrite_output()
-                .run(quiet=True)
+                .run(quiet=not self.verbose)
             )
         return output_path
 
@@ -104,21 +106,24 @@ class AudiobookBuilder:
             .input(concat_list_path, format='concat', safe=0)
             .output(joined_audio_path, c='copy')
             .overwrite_output()
-            .run(quiet=False)
+            .run(quiet=not self.verbose)
         )
 
         # Create a new ffmpeg process using subprocess
         # FIXME: I can't write the right ffmpeg-python code
         subprocess.run([
-            'ffmpeg',
-            "-xerror",
-            '-i', joined_audio_path,
-            '-i', metadata_path,
-            '-map_metadata', '1',
-            '-c', 'copy',
-            '-y', 
-            output_file
-        ], check=True)
+                'ffmpeg',
+                "-xerror",
+                '-i', joined_audio_path,
+                '-i', metadata_path,
+                '-map_metadata', '1',
+                '-c', 'copy',
+                '-y', 
+                output_file
+            ], check=True, 
+
+            stdout=subprocess.DEVNULL if not self.verbose else None,
+            stderr=subprocess.DEVNULL if not self.verbose else None)
 
     def build(self, output_file: str = "output.m4b") -> None:
         """Main method to build final m4b audiobook"""
@@ -127,12 +132,11 @@ class AudiobookBuilder:
             if not matched_files:
                 raise FileNotFoundError("No matching files found.")
 
-            # Import tqdm for progress bar visualization
-
-            # Convert files with progress bar showing conversion status
             converted_files = []
-            for idx, file in enumerate(tqdm(matched_files, 
-                desc="Converting files", unit="file")):
+            # Use tqdm for progress bar if verbose is False
+            files = matched_files if self.verbose else tqdm(matched_files, 
+                desc="Converting files", unit="file")
+            for idx, file in enumerate(files):
                 converted_file = self._convert_to_m4a(file, idx)
                 converted_files.append(converted_file)
 
@@ -157,8 +161,11 @@ def main_cat(args : argparse.Namespace) -> None:
 
         builder = AudiobookBuilder(directory=args.PATH, 
             file_keywords=file_keywords,
-            re_encode=not args.not_force)
+            re_encode=not args.not_force,
+            verbose=args.verbose)
         builder.build(output_file=output_file)
+
+    print(f"Output file: {output_file}")
 
 def parser_cat(subparser: argparse._SubParsersAction) -> None:
     cat_parser = subparser.add_parser("cat", aliases=["audiobook"],
