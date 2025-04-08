@@ -1,4 +1,3 @@
-
 import argparse
 import os
 import re
@@ -22,13 +21,16 @@ class ListFiles:
 
     def list(self) -> List[str]:
         """
-        List files in the directory.
+        List files in the directory (non-recursive).
         :return: List of files in the directory.
         """
         files = []
-        for _, _, filenames in os.walk(self.path):
-            for filename in filenames:
-                files.append(self._filter(filename))
+        for filename in os.listdir(self.path):
+            # Check if the item is a file
+            if os.path.isfile(os.path.join(self.path, filename)):
+                name, ext = os.path.splitext(filename)
+                files.append(self._filter(name) + ext)
+
         return files
     
     def _filter(self, str) -> str:
@@ -39,15 +41,22 @@ class ListFiles:
     
 def main_list(args : argparse.Namespace) -> None:
     path = args.PATH
+
+    filters = args.filters
+    if filters is None:
+        filters = []
+
+    # default filters
+    filters.append(r'-[a-zA-Z0-9-]{11,}$')
     
     if os.path.isfile(path):
         with ArchiveExtractor(path) as temp_dir:
-            list_files = ListFiles(str(temp_dir), args.filters)
+            list_files = ListFiles(str(temp_dir), filters)
             files = list_files.list()
             for file in files:
                 print(file)
     elif os.path.isdir(path):
-        list_files = ListFiles(path, args.filters)
+        list_files = ListFiles(path, filters)
         files = list_files.list()
         for file in files:
             print(file)
