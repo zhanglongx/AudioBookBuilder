@@ -54,4 +54,6 @@ Mediacat will first generate a list of media files in a directory, extract audio
 
 ## TODO
 
-- [ ] Support for reading media files from archiver (e.g. zip, tar, etc.)
+- [ ] Support for reading media files from archiver (e.g. zip, tar, etc.).
+
+- [ ] Customize the chapters prefixes.
