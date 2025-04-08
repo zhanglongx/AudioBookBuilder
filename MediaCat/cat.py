@@ -59,6 +59,7 @@ class AudiobookBuilder:
             return "aac_at"
         else:
             logging.debug("Using fall-back software AAC encoder")
+            logging.info("Software AAC encoder may be slow")
             return "aac"
 
     def _match_files(self) -> List[str]:
