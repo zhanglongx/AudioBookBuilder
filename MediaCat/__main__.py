@@ -3,6 +3,7 @@ import argparse
 import sys
 
 from MediaCat.list_files import parser_list
+from MediaCat.cat import parser_cat
 
 VERSION = "1.0.0"
 
@@ -16,6 +17,7 @@ def main() -> None:
 
     # Add the list command parser
     parser_list(subparsers)
+    parser_cat(subparsers)
 
     args = parser.parse_args()
 

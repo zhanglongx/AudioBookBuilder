@@ -66,6 +66,8 @@ def main_list(args : argparse.Namespace) -> None:
         raise FileNotFoundError(f"Path {path} does not exist.")
     
 def parser_list(subparsers : argparse._SubParsersAction) -> None:
-    list_parser = subparsers.add_parser('list', help='List files in a directory or archive.')
-    list_parser.add_argument('PATH', type=str, help='Path to the directory or archive to list files from.')
+    list_parser = subparsers.add_parser('list', 
+        help='List files in a directory or archive.')
+    list_parser.add_argument('PATH', type=str, 
+        help='Path to the directory or archive to list files from.')
     list_parser.set_defaults(func=main_list)
