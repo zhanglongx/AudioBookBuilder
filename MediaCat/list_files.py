@@ -51,12 +51,14 @@ def main_list(args : argparse.Namespace) -> None:
     
     if os.path.isfile(path):
         with ArchiveExtractor(path) as temp_dir:
-            list_files = ListFiles(str(temp_dir), filters)
+            list_files = ListFiles(path=str(temp_dir), 
+                filters=filters)
             files = list_files.list()
             for file in files:
                 print(file)
     elif os.path.isdir(path):
-        list_files = ListFiles(path, filters)
+        list_files = ListFiles(path=path, 
+            filters=filters)
         files = list_files.list()
         for file in files:
             print(file)
