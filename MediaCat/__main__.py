@@ -16,7 +16,7 @@ def main() -> None:
         help='Show the version number and exit')
     subparsers = parser.add_subparsers(dest='command')
 
-    # Add the list command parser
+    # Add the sub-command parser
     parser_list(subparsers)
     parser_cat(subparsers)
 
