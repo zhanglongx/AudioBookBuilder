@@ -76,7 +76,7 @@ class AudiobookBuilder:
             )
         return output_path
 
-    def _generate_chapters(self, converted_files) -> str:
+    def _generate_chapters(self, converted_files : List) -> str:
         """Generate a ffmetadata file with chapters"""
         metadata_path = os.path.join(self.temp_dir, "chapters.txt")
         with open(metadata_path, "w", encoding=DEFAULT_ENCODING) as f:
