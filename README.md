@@ -22,13 +22,13 @@ Mediacat is a tool to automate the stitching of media files, mainly for the prod
 
    - path: The path to the directory containing the media files.
 
-   - list.txt: It's the built-in list filename used by MediaCat to concatenate the media files.
+   - list.txt: The built-in list filename used by MediaCat to concatenate the media files, see steps below.
 
 3. Edit the `list` file, mainly re-ordering the files, or stripping the file names.
 
     NOTE: 
 
-    - MediaCat has built-in reg-based filter `-[a-zA-Z0-9-]{11,}$` to remove the hash from the file names. This is useful for media files download from yt.
+    - MediaCat has built-in reg-based filter `'-[a-zA-Z0-9-]{11,}$'` to remove the hash from the file names. This is useful for media files download from yt.
 
     - Do not delete the intervening characters, as this will cause an error in the media concat the next step.
 
@@ -38,7 +38,7 @@ Mediacat is a tool to automate the stitching of media files, mainly for the prod
 
     - ❌ `-a-b-c.mp4` -> `-ab-c.mp4`
 
-4. Once the `list` file('list.txt' as default) is ready, concat the media files:
+4. Once the `list` file ('list.txt' as default) is ready, concat the media files:
 
     ```bash
     python -m MediaCat cat <path>
