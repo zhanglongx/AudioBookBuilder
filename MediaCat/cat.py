@@ -33,6 +33,7 @@ class AudiobookBuilder:
             raise FileNotFoundError(f"Directory not found: {directory}")
 
         self.directory = os.path.abspath(directory)
+        # remove file extensions from keywords
         self.file_keywords = [os.path.splitext(keyword)[0] for keyword in file_keywords]
         self.bitrate = bitrate
         self.verbose = verbose
