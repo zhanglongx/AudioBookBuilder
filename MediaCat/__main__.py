@@ -6,7 +6,7 @@ import logging
 from MediaCat.list_files import parser_list
 from MediaCat.cat import parser_cat
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="MediaCat: A tool for media file management.")

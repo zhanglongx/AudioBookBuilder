@@ -173,6 +173,8 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+.DS_Store
+
 .vscode/
 
 # Compressed files
@@ -190,3 +192,5 @@ media_cat_*/
 
 *.m4b
 *.txt
+
+*.png

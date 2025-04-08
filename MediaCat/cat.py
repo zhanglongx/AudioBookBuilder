@@ -65,15 +65,13 @@ class AudiobookBuilder:
     def _match_files(self) -> List[str]:
         """Match files in the directory that contain any of the keywords"""
         matched = []
-        for file in os.listdir(self.directory):
-            full_path = os.path.join(self.directory, file)
-            if not os.path.isfile(full_path):
-                continue
+        for keyword in self.file_keywords:
+            for file in os.listdir(self.directory):
+                if keyword in file:
+                    matched.append(os.path.join(self.directory, file))
 
-            if any(keyword in file for keyword in self.file_keywords):
-                matched.append(full_path)
-            else:
-                logging.warning(f"File '{file}' doesn't match any keyword.")
+        if len(matched) != len(set(matched)):
+            logging.warning("Not all files are unique, duplicates found")
 
         return matched
 
@@ -152,7 +150,8 @@ class AudiobookBuilder:
             stdout=subprocess.DEVNULL if not self.verbose else None,
             stderr=subprocess.DEVNULL if not self.verbose else None)
 
-    def build(self, output_file: str = "output.m4b") -> None:
+    def build(self, output_file: str = "output.m4b", 
+            cleanup : bool = True) -> None:
         """Main method to build final m4b audiobook"""
         try:
             matched_files = self._match_files()
@@ -174,7 +173,10 @@ class AudiobookBuilder:
                 converted_files=converted_files)
 
         finally:
-            shutil.rmtree(self.temp_dir)
+            if cleanup:
+                shutil.rmtree(self.temp_dir)
+            else:
+                print(f"Temporary files kept in: {self.temp_dir}")
 
 def main_cat(args : argparse.Namespace) -> None:
     output_file = os.path.join(args.output)
@@ -190,7 +192,8 @@ def main_cat(args : argparse.Namespace) -> None:
             file_keywords=file_keywords,
             re_encode=not args.not_re_encode,
             verbose=args.verbose)
-        builder.build(output_file=output_file)
+        builder.build(output_file=output_file,
+            cleanup=not args.not_cleanup)
 
     print(f"Output file: {output_file}")
 
@@ -199,6 +202,8 @@ def parser_cat(subparser: argparse._SubParsersAction) -> None:
         help="Build an audiobook from media files")
     cat_parser.add_argument("-b", "--bitrate", type=str, default=DEFAULT_BITRATE,
         help="re-encode audio bitrate")
+    cat_parser.add_argument("--not-cleanup", action="store_true", default=False,
+        help="do not delete temporary files")
     cat_parser.add_argument("--not-re-encode", action="store_true", default=False,
         help="force re-encode all files, even if they are already in .m4a format")
     cat_parser.add_argument("-l", "--list", type=str, default="list.txt",

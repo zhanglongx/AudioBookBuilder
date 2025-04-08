@@ -32,6 +32,7 @@ class ListFiles:
                 name, ext = os.path.splitext(filename)
                 files.append(self._filter(name) + ext)
 
+        files.sort()
         return files
     
     def _filter(self, str) -> str:
@@ -48,7 +49,7 @@ def main_list(args : argparse.Namespace) -> None:
         filters = []
 
     # default filters
-    filters.append(r'-[a-zA-Z0-9-]{11,}$')
+    filters.append(r'-[a-zA-Z0-9-_]{11,}$')
 
     logging.debug(f"Filters: {filters}")
     
