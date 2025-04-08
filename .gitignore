@@ -188,4 +188,5 @@ cython_debug/
 
 media_cat_*/
 
+*.m4b
 *.txt

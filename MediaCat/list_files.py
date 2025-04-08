@@ -68,6 +68,8 @@ def main_list(args : argparse.Namespace) -> None:
 def parser_list(subparsers : argparse._SubParsersAction) -> None:
     list_parser = subparsers.add_parser('list', 
         help='List files in a directory or archive.')
+    list_parser.add_argument('-f', '--filters', nargs='*', 
+        default=[], help='List of filters to use')
     list_parser.add_argument('PATH', type=str, 
         help='Path to the directory or archive to list files from.')
     list_parser.set_defaults(func=main_list)

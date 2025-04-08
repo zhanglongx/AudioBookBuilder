@@ -4,9 +4,9 @@ import os
 import shutil
 import tempfile
 import platform
-import sys
 import logging
 import ffmpeg
+import subprocess
 
 from typing import List
 
@@ -14,18 +14,20 @@ from MediaCat.const import (DEFAULT_ENCODING)
 
 class AudiobookBuilder:
     def __init__(self, directory: str, 
-        file_keywords: List[str]) -> None:
+        file_keywords : List[str],
+        re_encode : bool = False) -> None:
         if not os.path.isdir(directory):
-            raise ValueError(f"The specified directory does not exist: {directory}")
+            raise FileNotFoundError(f"Directory not found: {directory}")
 
         self.directory = os.path.abspath(directory)
         self.file_keywords = [os.path.splitext(keyword)[0] for keyword in file_keywords]
+        self.re_encode = re_encode
 
         self.temp_dir = tempfile.mkdtemp()
         self.converted_files: List[str] = []
-        self.aac_encoder = self._select_hw_encoder()
 
-    def _select_hw_encoder(self) -> str:
+    @property
+    def aac_encoder(self) -> str:
         """Select hardware AAC encoder based on platform"""
         # FIXME: dynamic probing for available encoders
         system = platform.system()
@@ -54,7 +56,7 @@ class AudiobookBuilder:
     def _convert_to_m4a(self, input_file: str, index: int) -> str:
         """Convert a file to .m4a format using ffmpeg-python, if not already"""
         output_path = os.path.join(self.temp_dir, f"{index:02d}.m4a")
-        if input_file.lower().endswith('.m4a'):
+        if not self.re_encode and input_file.lower().endswith('.m4a'):
             shutil.copy(input_file, output_path)
         else:
             (
@@ -102,24 +104,28 @@ class AudiobookBuilder:
             .input(concat_list_path, format='concat', safe=0)
             .output(joined_audio_path, c='copy')
             .overwrite_output()
-            .run(quiet=True)
+            .run(quiet=False)
         )
 
-        (
-            ffmpeg
-            .input(joined_audio_path)
-            .input(metadata_path, f='ffmetadata')
-            .output(output_file, map_metadata='1', c='copy')
-            .overwrite_output()
-            .run(quiet=True)
-        )
+        # Create a new ffmpeg process using subprocess
+        # FIXME: I can't write the right ffmpeg-python code
+        subprocess.run([
+            'ffmpeg',
+            "-xerror",
+            '-i', joined_audio_path,
+            '-i', metadata_path,
+            '-map_metadata', '1',
+            '-c', 'copy',
+            '-y', 
+            output_file
+        ], check=True)
 
     def build(self, output_file: str = "output.m4b") -> None:
         """Main method to build final m4b audiobook"""
         try:
             matched_files = self._match_files()
             if not matched_files:
-                raise ValueError("No matching media files were found in the directory.")
+                raise FileNotFoundError("No matching files found.")
 
             self.converted_files = [
                 self._convert_to_m4a(file, idx)
@@ -133,30 +139,34 @@ class AudiobookBuilder:
             shutil.rmtree(self.temp_dir)
 
 def main_cat(args : argparse.Namespace) -> None:
-    output_file = os.path.join(args.OUTPUT)
+    output_file = os.path.join(args.output)
 
     if not os.path.exists(args.list):
-        raise ValueError("The specified list file does not exist: "
-            f"{args.list}")
+        raise FileNotFoundError(f"List file not found: {args.list}")
 
     # TODO: archive
     with open(args.list, "r", encoding=DEFAULT_ENCODING) as f:
         file_keywords = f.read().splitlines()
 
-        builder = AudiobookBuilder(directory=args.input, 
-            file_keywords=file_keywords)
+        builder = AudiobookBuilder(directory=args.PATH, 
+            file_keywords=file_keywords,
+            re_encode=args.force)
         builder.build(output_file=output_file)
 
 def parser_cat(subparser: argparse._SubParsersAction) -> None:
     cat_parser = subparser.add_parser("cat", aliases=["audiobook"],
         help="Build an audiobook from media files"
     )
-    cat_parser.add_argument( "OUTPUT", type=str,
-        help="output file name (with .m4b extension)"
+    cat_parser.add_argument("-f", "--force", action="store_true", default=False,
+        help="force re-encode all files, even if they are already in .m4a format"
     )
-    cat_parser.add_argument("-i", "--input", type=str,
-        help="input directory containing media files",
-    )
-    cat_parser.add_argument("-l", "--list", type=str,
+    cat_parser.add_argument("-l", "--list", type=str, default="list.txt",
         help="keywords to match files",
     )
+    cat_parser.add_argument("-o", "--output", type=str, default="output.m4b",
+        help="output file name (with .m4b extension)"
+    )
+    cat_parser.add_argument("PATH", type=str, 
+        help="input directory containing media files",
+        )
+    cat_parser.set_defaults(func=main_cat)
