@@ -11,11 +11,14 @@ import subprocess
 from typing import List
 from tqdm import tqdm
 
-from MediaCat.const import (DEFAULT_ENCODING)
+from MediaCat.const import (
+    DEFAULT_BITRATE,
+    DEFAULT_ENCODING)
 
 class AudiobookBuilder:
     def __init__(self, directory: str, 
         file_keywords : List[str],
+        bitrate : str = DEFAULT_BITRATE,
         verbose : bool = False,
         re_encode : bool = False) -> None:
         if not os.path.isdir(directory):
@@ -23,6 +26,7 @@ class AudiobookBuilder:
 
         self.directory = os.path.abspath(directory)
         self.file_keywords = [os.path.splitext(keyword)[0] for keyword in file_keywords]
+        self.bitrate = bitrate
         self.verbose = verbose
         self.re_encode = re_encode
 
@@ -64,7 +68,9 @@ class AudiobookBuilder:
             (
                 ffmpeg
                 .input(input_file)
-                .output(output_path, **{'c:a': self.aac_encoder, 'b:a': '196k'})
+                .output(output_path, **{
+                    'c:a': self.aac_encoder, 
+                    'b:a': self.bitrate})
                 .overwrite_output()
                 .run(quiet=not self.verbose)
             )
@@ -92,7 +98,8 @@ class AudiobookBuilder:
         duration = float(probe['format']['duration'])
         return duration
 
-    def _concat_audio(self, output_file: str, metadata_path: str, converted_files : List ) -> None:
+    def _concat_audio(self, output_file: str, 
+        metadata_path: str, converted_files : List ) -> None:
         """Concatenate audio files and embed chapters using ffmpeg-python"""
         concat_list_path = os.path.join(self.temp_dir, "inputs.txt")
         with open(concat_list_path, "w", encoding=DEFAULT_ENCODING) as f:
@@ -170,6 +177,9 @@ def main_cat(args : argparse.Namespace) -> None:
 def parser_cat(subparser: argparse._SubParsersAction) -> None:
     cat_parser = subparser.add_parser("cat", aliases=["audiobook"],
         help="Build an audiobook from media files"
+    )
+    cat_parser.add_argument("-b", "--bitrate", type=str, default=DEFAULT_BITRATE,
+        help="re-encode audio bitrate"
     )
     cat_parser.add_argument("--not-force", action="store_true", default=False,
         help="force re-encode all files, even if they are already in .m4a format"

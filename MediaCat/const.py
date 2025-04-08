@@ -1,2 +1,4 @@
 
+DEFAULT_BITRATE = "196k"
+
 DEFAULT_ENCODING = "utf-8"
