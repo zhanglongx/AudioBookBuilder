@@ -12,7 +12,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="MediaCat: A tool for media file management.")
     parser.add_argument('-v', '--verbose', action='store_true', default=False,
         help='Enable verbose output')
-    parser.add_argument('--version', action='version', version='MediaCat 1.0.0',
+    parser.add_argument('--version', action='version', version=f'MediaCat {VERSION}',
         help='Show the version number and exit'
     )
     subparsers = parser.add_subparsers(dest='command')
