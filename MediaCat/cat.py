@@ -21,6 +21,14 @@ class AudiobookBuilder:
         bitrate : str = DEFAULT_BITRATE,
         verbose : bool = False,
         re_encode : bool = False) -> None:
+        """
+        AudiobookBuilder class to build an audiobook from media files.
+        :param directory: Path to the directory containing media files.
+        :param file_keywords: List of keywords to match files.
+        :param bitrate: Bitrate for re-encoding audio files.
+        :param verbose: Verbose mode.
+        :param re_encode: Force re-encode all files, even if they are already in .m4a format.
+        """
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory not found: {directory}")
 
