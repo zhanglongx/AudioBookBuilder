@@ -2,6 +2,8 @@
 
 Mediacat is a tool to automate the stitching of media files, mainly for the production of audio books.
 
+Mediacat will first generate a list of media files in a directory, extract audio track, then concatenate them into a single media file (AudioBook format `m4b` for now).
+
 ## Pre-requisites
 
 - [FFMpeg](https://ffmpeg.org/download.html)
@@ -34,9 +36,9 @@ Mediacat is a tool to automate the stitching of media files, mainly for the prod
 
     Examples:
 
-    - ✅ `-a-b-c.mp4` -> `a-b-c.mp4`
+    - ✅ `-a-b-c.m4a` -> `a-b-c.m4a`
 
-    - ❌ `-a-b-c.mp4` -> `-ab-c.mp4`
+    - ❌ `-a-b-c.m4a` -> `-ab-c.m4a`
 
 4. Once the `list` file ('list.txt' as default) is ready, concat the media files:
 
