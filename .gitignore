@@ -172,3 +172,18 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+.vscode/
+
+# Compressed files
+# Ignore common archive formats to prevent large binary files in repo
+*.zip
+*.gz
+*.tar
+*.tgz
+*.rar
+*.7z
+*.bz2
+*.xz
+
+media_cat_*/
