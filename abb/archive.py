@@ -7,7 +7,7 @@ import tarfile
 from pathlib import Path
 from typing import Optional
 
-PREFIX = "media_cat_"
+PREFIX = "abb_"
 
 class UnsupportedArchiveFormat(Exception):
     """Raised when an unsupported archive format is encountered"""
