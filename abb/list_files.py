@@ -5,7 +5,7 @@ import logging
 
 from typing import List
 
-from MediaCat.archive import ArchiveExtractor
+from abb.archive import ArchiveExtractor
 
 class ListFiles:
     def __init__(self, path : str, filters : List[str] = []) -> None:

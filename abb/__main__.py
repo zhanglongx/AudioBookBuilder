@@ -3,8 +3,8 @@ import argparse
 import sys
 import logging
 
-from MediaCat.list_files import parser_list
-from MediaCat.cat import parser_cat
+from abb.list_files import parser_list
+from abb.cat import parser_cat
 
 VERSION = "1.0.1"
 

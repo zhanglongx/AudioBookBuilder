@@ -11,7 +11,7 @@ import subprocess
 from typing import List
 from tqdm import tqdm
 
-from MediaCat.const import (
+from abb.const import (
     DEFAULT_BITRATE,
     DEFAULT_ENCODING)
 
