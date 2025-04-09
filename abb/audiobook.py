@@ -197,7 +197,7 @@ class DirectoryBuilder(AudioBookBuilder):
                 if keyword in file:
                     matched.append(os.path.join(self.directory, file))
 
-        if len(matched) != len(set(matched)):
+        if len(matched) != len([f for f in os.listdir(self.directory)]):
             logging.warning("Not all files are unique, duplicates found")
 
         return matched
