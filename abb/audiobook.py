@@ -347,15 +347,15 @@ def parser_build(subparser: argparse._SubParsersAction) -> None:
     cat_parser = subparser.add_parser("build", aliases=["cat"],
         help="Build an audiobook from media files")
     cat_parser.add_argument("-b", "--bitrate", type=str, default=DEFAULT_BITRATE,
-        help="re-encode audio bitrate")
+        help="Re-encode audio bitrate")
     cat_parser.add_argument("--not-cleanup", action="store_true", default=False,
-        help="do not delete temporary files")
+        help="Do not delete temporary files")
     cat_parser.add_argument("--not-re-encode", action="store_true", default=False,
-        help="force re-encode all files, even if they are already in .m4a format")
+        help="Force re-encode all files, even if they are already in .m4a format")
     cat_parser.add_argument("-l", "--list", type=str, default="list.txt",
-        help="list file to generate the chapter info",)
+        help="List file to generate the chapter info",)
     cat_parser.add_argument("-o", "--output", type=str, default="output.m4b",
-        help="output file name (with .m4b extension)")
+        help="Output file name (with .m4b extension)")
     cat_parser.add_argument("PATH", type=str, 
-        help="input directory containing media files, or single media file",)
+        help="Input directory containing media files, or single media file",)
     cat_parser.set_defaults(func=main_build)
