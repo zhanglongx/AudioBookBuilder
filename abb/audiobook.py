@@ -115,6 +115,9 @@ class DirectoryBuilder(AudioBookBuilder):
             # remove file extensions from keywords
             self.file_keywords = [os.path.splitext(k)[0] for k in keywords]
 
+        if not self.file_keywords:
+            raise ValueError("No keywords found in the keywords file.")
+
         self.bitrate = bitrate
         self.re_encode = re_encode
 
@@ -198,7 +201,8 @@ class DirectoryBuilder(AudioBookBuilder):
                     matched.append(os.path.join(self.directory, file))
 
         if len(matched) != len([f for f in os.listdir(self.directory)]):
-            logging.warning("Not all files are unique, duplicates found")
+            logging.warning("Not all files matched."
+                f" Found {len(matched)} out of {len(os.listdir(self.directory))} files.")
 
         return matched
 
