@@ -84,7 +84,7 @@ class AudioBookBuilder:
 
 class DirectoryBuilder(AudioBookBuilder):
     def __init__(self, directory: str, 
-        file_keywords : List[str],
+        keywords_file : str,
         bitrate : str = DEFAULT_BITRATE,
         verbose : bool = False,
         re_encode : bool = True) -> None:
@@ -101,13 +101,20 @@ class DirectoryBuilder(AudioBookBuilder):
 
         if not os.listdir(directory):
             raise ValueError(f"Directory is empty: {directory}")
+        
+        if not os.path.exists(keywords_file):
+            raise FileNotFoundError(f"Keywords file not found: {keywords_file}")
 
         if re_encode is False:
             logging.warning("Copy files instead of re-encoding may cause issues")
 
         self.directory = os.path.abspath(directory)
-        # remove file extensions from keywords
-        self.file_keywords = [os.path.splitext(keyword)[0] for keyword in file_keywords]
+
+        with open(keywords_file, "r", encoding=DEFAULT_ENCODING) as f:
+            keywords = f.read().splitlines()
+            # remove file extensions from keywords
+            self.file_keywords = [os.path.splitext(k)[0] for k in keywords]
+
         self.bitrate = bitrate
         self.re_encode = re_encode
 
@@ -227,15 +234,15 @@ def main_build(args : argparse.Namespace) -> None:
         raise FileNotFoundError(f"List file not found: {args.list}")
 
     # TODO: archive
-    with open(args.list, "r", encoding=DEFAULT_ENCODING) as f:
-        file_keywords = f.read().splitlines()
-
+    builder : AudioBookBuilder
+    if os.path.isdir(args.PATH):
         builder = DirectoryBuilder(directory=args.PATH, 
-            file_keywords=file_keywords,
+            keywords_file=args.list,
             re_encode=not args.not_re_encode,
             verbose=args.verbose)
-        builder.build(output_file=output_file,
-            cleanup=not args.not_cleanup)
+
+    builder.build(output_file=output_file,
+        cleanup=not args.not_cleanup)
 
     print(f"Output file: {output_file}")
 
