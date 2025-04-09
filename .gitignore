@@ -188,7 +188,8 @@ cython_debug/
 *.bz2
 *.xz
 
-media_cat_*/
+data_*/
+data/
 
 *.m4b
 *.txt

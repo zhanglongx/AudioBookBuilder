@@ -142,9 +142,9 @@ class DirectoryBuilder(AudioBookBuilder):
         with open(keywords_file, "r", encoding=DEFAULT_ENCODING) as f:
             keywords = f.read().splitlines()
             # remove file extensions from keywords
-            self.file_keywords = [os.path.splitext(k)[0] for k in keywords]
+            self.keywords = [os.path.splitext(k)[0] for k in keywords]
 
-        if not self.file_keywords:
+        if not self.keywords:
             raise ValueError("No keywords found in the keywords file.")
 
         self.temp_dir = tempfile.mkdtemp()
@@ -167,7 +167,7 @@ class DirectoryBuilder(AudioBookBuilder):
                 f.write("TIMEBASE=1/1000\n")
                 f.write(f"START={int(current_time * 1000)}\n")
                 f.write(f"END={int((current_time + duration) * 1000)}\n")
-                f.write(f"title={idx+1:02d}. {self.file_keywords[idx]}\n")
+                f.write(f"title={idx+1:02d}. {self.keywords[idx]}\n")
                 current_time += duration
         return metadata_path
     
@@ -225,7 +225,7 @@ class DirectoryBuilder(AudioBookBuilder):
     def _match_files(self) -> List[str]:
         """Match files in the directory that contain any of the keywords"""
         matched = []
-        for keyword in self.file_keywords:
+        for keyword in self.keywords:
             for file in os.listdir(self.directory):
                 if keyword in file:
                     matched.append(os.path.join(self.directory, file))
