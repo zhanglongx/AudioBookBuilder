@@ -315,6 +315,7 @@ class SingleBuilder(AudioBookBuilder):
             logging.warning(f"Temporary directory not found: {self.temp_dir}")
 
 def main_build(args : argparse.Namespace) -> None:
+    input_path = os.path.abspath(args.PATH)
     output_file = os.path.join(args.output)
 
     if not os.path.exists(args.list):
@@ -322,20 +323,20 @@ def main_build(args : argparse.Namespace) -> None:
 
     # TODO: archive
     builder : AudioBookBuilder
-    if os.path.isdir(args.PATH):
-        builder = DirectoryBuilder(directory=args.PATH, 
+    if os.path.isdir(input_path):
+        builder = DirectoryBuilder(directory=input_path, 
             keywords_file=args.list,
             bitrate=args.bitrate,
             re_encode=not args.not_re_encode,
             verbose=args.verbose)
-    elif os.path.isfile(args.PATH):
-        builder = SingleBuilder(file=args.PATH, 
+    elif os.path.isfile(input_path):
+        builder = SingleBuilder(file=input_path, 
             chapter_file=args.list,
             bitrate=args.bitrate,
             re_encode=not args.not_re_encode,
             verbose=args.verbose)
     else:
-        raise FileNotFoundError(f"File or directory not found: {args.PATH}")
+        raise FileNotFoundError(f"File or directory not found: {input_path}")
 
     builder.build(output_file=output_file,
         cleanup=not args.not_cleanup)
