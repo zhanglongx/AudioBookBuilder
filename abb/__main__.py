@@ -4,7 +4,7 @@ import sys
 import logging
 
 from abb.list_files import parser_list
-from abb.abb import parser_build
+from abb.audiobook import parser_build
 
 VERSION = "1.0.1"
 
