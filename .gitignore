@@ -192,6 +192,6 @@ data_*/
 data/
 
 *.m4b
-*.txt
+list.txt
 
 *.png
