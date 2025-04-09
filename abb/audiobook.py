@@ -1,4 +1,3 @@
-
 import argparse
 import os
 import shutil
@@ -15,11 +14,18 @@ from tqdm import tqdm
 from abb.const import (DEFAULT_BITRATE, DEFAULT_ENCODING)
 
 class AudioBookBuilder:
-    def __init__(self, verbose : bool = False) -> None:
+    def __init__(self, 
+        bitrate : str = DEFAULT_BITRATE,
+        re_encode : bool = True,
+        verbose : bool = False) -> None:
         """
         ABB base class to handle audiobook building.
+        :param bitrate: Bitrate for re-encoding audio files.
+        :param re_encode: Force re-encode all files, even if they are already in .m4a format.
         :param verbose: Verbose mode.
         """
+        self.bitrate = bitrate
+        self.re_encode = re_encode
         self.verbose = verbose
 
     @property
@@ -37,7 +43,30 @@ class AudioBookBuilder:
             logging.debug("Using fall-back software AAC encoder")
             logging.info("Software AAC encoder may be slow")
             return "aac"
-        
+
+    def _convert_to_m4a(self, input_file : str, output_file : str) -> None:
+        """Convert a file to .m4a format using ffmpeg-python, if not already"""
+        if not self.re_encode and input_file.lower().endswith('.m4a'):
+            shutil.copy(input_file, output_file)
+        else:
+            (
+                ffmpeg
+                .input(input_file)
+                .output(output_file, **{
+                    'c:a': self.aac_encoder, 
+                    'b:a': self.bitrate,
+                    'map': '0:a'
+                })
+                .overwrite_output()
+                .run(quiet=not self.verbose)
+            )
+
+    def _get_audio_duration(self, file_path: str) -> float:
+        """Get duration in seconds using ffmpeg-python probe"""
+        probe = ffmpeg.probe(file_path)
+        duration = float(probe['format']['duration'])
+        return duration
+
     @abstractmethod
     def chapters(self) -> str:
         """Abstract method to generate chapters"""
@@ -86,15 +115,15 @@ class DirectoryBuilder(AudioBookBuilder):
     def __init__(self, directory: str, 
         keywords_file : str,
         bitrate : str = DEFAULT_BITRATE,
-        verbose : bool = False,
-        re_encode : bool = True) -> None:
+        re_encode : bool = True,
+        verbose : bool = False) -> None:
         """
         AudiobookBuilder class to build an audiobook from media files.
         :param directory: Path to the directory containing media files.
         :param file_keywords: List of keywords to match files.
         :param bitrate: Bitrate for re-encoding audio files.
-        :param verbose: Verbose mode.
         :param re_encode: Force re-encode all files, even if they are already in .m4a format.
+        :param verbose: Verbose mode.
         """
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory not found: {directory}")
@@ -118,15 +147,13 @@ class DirectoryBuilder(AudioBookBuilder):
         if not self.file_keywords:
             raise ValueError("No keywords found in the keywords file.")
 
-        self.bitrate = bitrate
-        self.re_encode = re_encode
-
         self.temp_dir = tempfile.mkdtemp()
         logging.debug(f"Temporary directory created: {self.temp_dir}")
 
         self._converted_files = []
 
-        super().__init__(verbose=verbose)
+        super().__init__(bitrate=bitrate, re_encode=re_encode, 
+            verbose=verbose)
 
     def chapters(self) -> str:
         """Implementation of the abstract method to generate chapters"""
@@ -135,7 +162,7 @@ class DirectoryBuilder(AudioBookBuilder):
             f.write(";FFMETADATA1\n")
             current_time = 0
             for idx, file in enumerate(self.converted_files):
-                duration = self._get_audio_duration(file)
+                duration = super()._get_audio_duration(file)
                 f.write("[CHAPTER]\n")
                 f.write("TIMEBASE=1/1000\n")
                 f.write(f"START={int(current_time * 1000)}\n")
@@ -186,7 +213,10 @@ class DirectoryBuilder(AudioBookBuilder):
         files = matched_files if self.verbose else tqdm(matched_files, 
             desc="Converting files", unit="file")
         for idx, file in enumerate(files):
-            converted_file = self._convert_to_m4a(file, idx)
+            output_file = os.path.join(self.temp_dir, f"{idx:02d}.m4a")
+
+            converted_file = super()._convert_to_m4a(input_file=file, 
+                output_file=output_file)
             converted_files.append(converted_file)
 
         self._converted_files = converted_files
@@ -205,31 +235,84 @@ class DirectoryBuilder(AudioBookBuilder):
                 f" Found {len(matched)} out of {len(os.listdir(self.directory))} files.")
 
         return matched
+    
+class SingleBuilder(AudioBookBuilder):
+    def __init__(self, file: str, 
+        chapter_file : str,
+        bitrate : str = DEFAULT_BITRATE,
+        re_encode : bool = True,
+        verbose : bool = False) -> None:
+        """
+        AudiobookBuilder class to build an audiobook from a single media file.
+        :param file: Path to the media file.
+        :param chapter_file: Path to the raw chapter file.
+        :param bitrate: Bitrate for re-encoding audio files.
+        :param re_encode: Force re-encode all files, even if they are already in .m4a format.
+        :param verbose: Verbose mode.
+        """
+        if not os.path.isfile(file):
+            raise FileNotFoundError(f"File not found: {file}")
+        
+        if not os.path.exists(chapter_file):
+            raise FileNotFoundError(f"Chapter file not found: {chapter_file}")
 
-    def _convert_to_m4a(self, input_file: str, index: int) -> str:
-        """Convert a file to .m4a format using ffmpeg-python, if not already"""
-        output_path = os.path.join(self.temp_dir, f"{index:02d}.m4a")
-        if not self.re_encode and input_file.lower().endswith('.m4a'):
-            shutil.copy(input_file, output_path)
+        self.file = os.path.abspath(file)
+        self.chapters_file = os.path.abspath(chapter_file)
+
+        self.temp_dir = tempfile.mkdtemp()
+        super().__init__(bitrate=bitrate, re_encode=re_encode, 
+            verbose=verbose)
+
+    def chapters(self) -> str:
+        """
+        Convert chapter data from '00:00:01 title' format to ffmetadata format.
+        """
+        metadata_path = os.path.join(self.temp_dir, "chapters.txt")
+        duration = int(super()._get_audio_duration(self.file) * 1000) / 1000
+        with open(self.chapters_file, "r", encoding=DEFAULT_ENCODING) as f:
+            with open(metadata_path, "w", encoding=DEFAULT_ENCODING) as out:
+                # Write ffmetadata header
+                out.write(";FFMETADATA1\n")
+                chapter_times = []
+                chapter_titles = []
+
+                # Parse the input file to extract times and titles
+                for idx, line in enumerate(f):
+                    parts = line.strip().split(" ", 1)
+                    if len(parts) != 2:
+                        raise ValueError(f"Invalid chapter format: {line.strip()}")
+                    time_str, title = parts
+                    # Convert time string (HH:MM:SS) to seconds
+                    h, m, s = map(int, time_str.split(":"))
+                    current_time = h * 3600 + m * 60 + s
+                    chapter_times.append(current_time)
+                    chapter_titles.append(f"{idx+1:02d}. {title.strip()}")
+
+                for i in range(len(chapter_times)):
+                    start_time = chapter_times[i]
+                    end_time = chapter_times[i + 1] if i + 1 < len(chapter_times) else duration
+                    out.write("[CHAPTER]\n")
+                    out.write("TIMEBASE=1/1000\n")
+                    out.write(f"START={start_time * 1000}\n")
+                    out.write(f"END={end_time * 1000}\n")
+                    out.write(f"title={chapter_titles[i]}\n")
+
+        return metadata_path
+    
+    def raw_audio(self) -> str:
+        """Implementation of the abstract method to get raw audio"""
+        output_file = os.path.join(self.temp_dir, "single.m4a")
+        super()._convert_to_m4a(input_file=self.file,
+            output_file=output_file)
+        return output_file
+    
+    def cleanup(self) -> None:
+        """Implementation of the abstract method to clean up temporary files"""
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+            logging.debug(f"Temporary directory removed: {self.temp_dir}")
         else:
-            (
-                ffmpeg
-                .input(input_file)
-                .output(output_path, **{
-                    'c:a': super().aac_encoder, 
-                    'b:a': self.bitrate,
-                    'map': '0:a'
-                })
-                .overwrite_output()
-                .run(quiet=not self.verbose)
-            )
-        return output_path
-
-    def _get_audio_duration(self, file_path: str) -> float:
-        """Get duration in seconds using ffmpeg-python probe"""
-        probe = ffmpeg.probe(file_path)
-        duration = float(probe['format']['duration'])
-        return duration
+            logging.warning(f"Temporary directory not found: {self.temp_dir}")
 
 def main_build(args : argparse.Namespace) -> None:
     output_file = os.path.join(args.output)
@@ -242,8 +325,17 @@ def main_build(args : argparse.Namespace) -> None:
     if os.path.isdir(args.PATH):
         builder = DirectoryBuilder(directory=args.PATH, 
             keywords_file=args.list,
+            bitrate=args.bitrate,
             re_encode=not args.not_re_encode,
             verbose=args.verbose)
+    elif os.path.isfile(args.PATH):
+        builder = SingleBuilder(file=args.PATH, 
+            chapter_file=args.list,
+            bitrate=args.bitrate,
+            re_encode=not args.not_re_encode,
+            verbose=args.verbose)
+    else:
+        raise FileNotFoundError(f"File or directory not found: {args.PATH}")
 
     builder.build(output_file=output_file,
         cleanup=not args.not_cleanup)
