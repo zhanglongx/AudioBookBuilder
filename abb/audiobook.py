@@ -316,7 +316,7 @@ class SingleBuilder(AudioBookBuilder):
 
 def main_build(args : argparse.Namespace) -> None:
     input_path = os.path.abspath(args.PATH)
-    output_file = os.path.join(args.output)
+    output_file = os.path.abspath(args.output)
 
     if not os.path.exists(args.list):
         raise FileNotFoundError(f"List file not found: {args.list}")
