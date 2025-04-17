@@ -215,9 +215,9 @@ class DirectoryBuilder(AudioBookBuilder):
         for idx, file in enumerate(files):
             output_file = os.path.join(self.temp_dir, f"{idx:02d}.m4a")
 
-            converted_file = super()._convert_to_m4a(input_file=file, 
+            super()._convert_to_m4a(input_file=file, 
                 output_file=output_file)
-            converted_files.append(converted_file)
+            converted_files.append(output_file)
 
         self._converted_files = converted_files
         return converted_files
