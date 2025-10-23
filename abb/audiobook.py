@@ -7,13 +7,13 @@ import logging
 import ffmpeg
 import subprocess
 
-from abc import abstractmethod
+from abc import (ABC, abstractmethod)
 from typing import List
 from tqdm import tqdm
 
 from abb.const import (DEFAULT_BITRATE, DEFAULT_ENCODING)
 
-class AudioBookBuilder:
+class AudioBookBuilder(ABC):
     def __init__(self, 
         bitrate : str = DEFAULT_BITRATE,
         re_encode : bool = True,
@@ -215,8 +215,7 @@ class DirectoryBuilder(AudioBookBuilder):
         for idx, file in enumerate(files):
             output_file = os.path.join(self.temp_dir, f"{idx:02d}.m4a")
 
-            super()._convert_to_m4a(input_file=file, 
-                output_file=output_file)
+            super()._convert_to_m4a(input_file=file, output_file=output_file)
             converted_files.append(output_file)
 
         self._converted_files = converted_files
