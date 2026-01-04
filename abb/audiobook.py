@@ -317,20 +317,30 @@ def main_build(args : argparse.Namespace) -> None:
     input_path = os.path.abspath(args.PATH)
     output_file = os.path.abspath(args.output)
 
-    if not os.path.exists(args.list):
-        raise FileNotFoundError(f"List file not found: {args.list}")
+    list_file: str = args.list
 
     # TODO: archive
     builder : AudioBookBuilder
     if os.path.isdir(input_path):
+        if not os.path.exists(list_file):
+            logging.debug("List file not found in current directory, "
+                "checking input file directory")
+            list_file = os.path.join(input_path, list_file)
+
+            if not os.path.exists(list_file):
+                raise FileNotFoundError(f"List file not found: {list_file}")
+
         builder = DirectoryBuilder(directory=input_path, 
-            keywords_file=args.list,
+            keywords_file=list_file,
             bitrate=args.bitrate,
             re_encode=not args.not_re_encode,
             verbose=args.verbose)
     elif os.path.isfile(input_path):
+        if not os.path.exists(list_file):
+            raise FileNotFoundError(f"List file not found: {list_file}")
+
         builder = SingleBuilder(file=input_path, 
-            chapter_file=args.list,
+            chapter_file=list_file,
             bitrate=args.bitrate,
             re_encode=not args.not_re_encode,
             verbose=args.verbose)

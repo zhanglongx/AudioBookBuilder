@@ -6,7 +6,7 @@ import logging
 from abb.list_files import parser_list
 from abb.audiobook import parser_build
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="AudioBookBuilder: A tool for audio-book building.")
