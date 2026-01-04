@@ -5,7 +5,8 @@ import logging
 
 from typing import List
 
-from abb.archive import ArchiveExtractor
+from .archive import ArchiveExtractor
+from .utils import is_media_extension
 
 class ListFiles:
     def __init__(self, path : str, filters : List[str] = []) -> None:
@@ -30,6 +31,10 @@ class ListFiles:
             # Check if the item is a file
             if os.path.isfile(os.path.join(self.path, filename)):
                 name, ext = os.path.splitext(filename)
+                if not is_media_extension(ext):
+                    logging.debug(f"Skipping non-media file: {filename}")
+                    continue
+
                 files.append(self._filter(name) + ext)
 
         files.sort()

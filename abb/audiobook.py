@@ -11,7 +11,8 @@ from abc import (ABC, abstractmethod)
 from typing import List
 from tqdm import tqdm
 
-from abb.const import (DEFAULT_BITRATE, DEFAULT_ENCODING)
+from .const import (DEFAULT_BITRATE, DEFAULT_ENCODING)
+from .utils import is_media_extension
 
 class AudioBookBuilder(ABC):
     def __init__(self, 
@@ -229,7 +230,8 @@ class DirectoryBuilder(AudioBookBuilder):
                 if keyword in file:
                     matched.append(os.path.join(self.directory, file))
 
-        if len(matched) != len([f for f in os.listdir(self.directory)]):
+        if len(matched) != len([f for f in os.listdir(self.directory) if 
+                                is_media_extension(os.path.splitext(f)[1])]):
             logging.warning("Not all files matched."
                 f" Found {len(matched)} out of {len(os.listdir(self.directory))} files.")
 
